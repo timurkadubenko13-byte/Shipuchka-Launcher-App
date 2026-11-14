@@ -1,0 +1,45 @@
+name: Build SHIPUCHKA Windows installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'client/**'
+      - 'build-exe.bat'
+      - '.github/workflows/build-windows-exe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install WiX Toolset 3
+        shell: pwsh
+        run: choco install wixtoolset --version=3.14.1 -y --no-progress
+
+      - name: Build launcher and installer
+        shell: cmd
+        run: build-exe.bat
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: SHIPUCHKA-Setup-Windows-x64
+          path: |
+            dist/installer/*.exe
+            dist/portable/**
+          if-no-files-found: error
+          retention-days: 14
